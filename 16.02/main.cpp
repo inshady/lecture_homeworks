@@ -6,22 +6,13 @@ template< class T > struct BiList {
   BiList<T> * prev;
 };
 
-template< class T > BiList<T>* addHead(BiList<T>* h, const T& d)
+template< class T > BiList<T>* add(BiList<T>* h, const T& d)
 {
-  BiList<T>* head = new BiList<T>{d, h, nullptr};
+  BiList<T>* list = new BiList<T>{d, h, h};
   if (h) {
-    h->prev = head;
+    h->prev = list;
   }
-  return head;
-}
-
-template< class T > BiList<T>* addTail(BiList<T>* t, const T& d)
-{
-  BiList<T>* tail = new BiList<T>{d, nullptr, t};
-  if (t) {
-    t->next = tail;
-  }
-  return tail;
+  return list;
 }
 
 template< class T > BiList<T>* insertAfter(BiList<T>* left, const T& d)
@@ -46,29 +37,17 @@ template< class T > BiList<T>* insertBefore(BiList<T>* right, const T& d)
   return ins;
 }
 
-template< class T > BiList<T>* cutHead(BiList<T>* h) noexcept
+template< class T > BiList<T>* cut(BiList<T>* h) noexcept
 {
   BiList<T>* ret = h->next;
-  if (ret) {
-    ret->prev = nullptr;
-  }
+  ret->prev = h->prev;
   delete h;
-  return ret;
-}
-
-template< class T > BiList<T>* cutTail(BiList<T>* t) noexcept
-{
-  BiList<T>* ret = t->prev;
-  if (ret) {
-    ret->next = nullptr;
-  }
-  delete t;
   return ret;
 }
 
 template< class T > BiList<T>* eraseAfter(BiList<T>* h) noexcept
 {
-  BiList<T>* n = cutHead(h->next);
+  BiList<T>* n = cut(h->next);
   h->next = n;
   if (n) {
     n->prev = h;
@@ -78,7 +57,7 @@ template< class T > BiList<T>* eraseAfter(BiList<T>* h) noexcept
 
 template< class T > BiList<T>* eraseBefore(BiList<T>* t) noexcept
 {
-  BiList<T>* n = cutTail(t->prev);
+  BiList<T>* n = cut(t->prev);
   t->prev = n;
   if (n) {
     n->next = t;
@@ -88,11 +67,27 @@ template< class T > BiList<T>* eraseBefore(BiList<T>* t) noexcept
 
 template< class T > BiList<T>* clear(BiList<T>* h, BiList<T>* t) noexcept
 {
-  while (h != t) {
-    h = cutHead(h);
+  BiList<T>* start = h;
+  h = cut(h);
+  if (h) {
+    while (h != start) {
+      h = cut(h);
+    }
   }
   return h;
 }
+
+template< class T > size_t size(BiList<T>* h) {
+  size_t c = 0;
+  BiList<T>* start = h;
+
+  while(h != start) {
+    c++;
+    h = h->next;
+  }
+  return c;
+}
+
 
 template< class T, class F > F traverse(F f, BiList<T>* h, BiList<T>* t)
 {
@@ -116,14 +111,16 @@ int main()
     mass[i] = i + 1;
   }
 
-  BiList<int>* tail = new BiList<int>{mass[0], nullptr, nullptr};
-  BiList<int>* head = tail;
   BiList<int>* nil = nullptr;
-
-  for (size_t i = 1; i < n; i++) {
-    tail = addTail(tail, mass[i]);
+  BiList<int>* list = nullptr;
+  for (size_t i = 0; i < n; i++) {
+    BiList <int>* list = add(list, mass[i]);
   }
-  sum s = traverse(sum{}, head, nil);
+  sum s = traverse(sum{}, list, list->prev);
+
+  std::cout << s.result << "\n";
+
+  clear(list, list->prev);
 
   delete[] mass;
 }
