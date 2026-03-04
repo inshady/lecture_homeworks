@@ -8,22 +8,18 @@ template< class T > struct BiList {
 
 template< class T > BiList<T>* add(BiList<T>* h, const T& d)
 {
-  BiList<T>* list = new BiList<T>{d, h, h};
-  if (h) {
-    h->prev = list;
+  if (!h) {
+    BiList<T>* list = new BiList<T>{d, nullptr, nullptr};
+    list->next = list;
+    list->prev = list;
+    return list;
   }
-  return list;
-}
 
-template< class T > BiList<T>* insertAfter(BiList<T>* left, const T& d)
-{
-  BiList<T>* right = left->next;
-  BiList<T>* ins = new BiList<T>{d, right, left};
-  left->next = ins;
-  if (right) {
-    right->prev = ins;
-  }
-  return ins;
+  BiList<T>* after = h->next;
+  BiList<T>* list = new BiList<T>{d, after, h};
+  h->next = list;
+  after->prev = list;
+  return list;
 }
 
 template< class T > BiList<T>* insertBefore(BiList<T>* right, const T& d)
@@ -40,7 +36,12 @@ template< class T > BiList<T>* insertBefore(BiList<T>* right, const T& d)
 template< class T > BiList<T>* cut(BiList<T>* h) noexcept
 {
   BiList<T>* ret = h->next;
+  if (ret == h) {
+    delete h;
+    return nullptr;
+  }
   ret->prev = h->prev;
+  h->prev->next = ret;
   delete h;
   return ret;
 }
@@ -67,19 +68,19 @@ template< class T > BiList<T>* eraseBefore(BiList<T>* t) noexcept
 
 template< class T > BiList<T>* clear(BiList<T>* h, BiList<T>* t) noexcept
 {
-  BiList<T>* start = h;
-  h = cut(h);
-  if (h) {
-    while (h != start) {
+  BiList<T>* end = t->next;
+  while (h && h != end) {
       h = cut(h);
     }
-  }
   return h;
 }
 
-template< class T > size_t size(BiList<T>* h) {
+template< class T > size_t size(BiList<T>* h)
+{
   size_t c = 0;
   BiList<T>* start = h;
+  c++;
+  h = h->next;
 
   while(h != start) {
     c++;
@@ -96,10 +97,12 @@ template< class T, class F > F traverse(F f, BiList<T>* h, BiList<T>* t)
   }
   return f;
 }
+
+
 struct sum {
   std::string result = "";
-  void operator()(char c) {
-    result += c;
+  void operator()(int c) {
+    result += std::to_string(c);
   }
 };
 
@@ -114,7 +117,7 @@ int main()
   BiList<int>* nil = nullptr;
   BiList<int>* list = nullptr;
   for (size_t i = 0; i < n; i++) {
-    BiList <int>* list = add(list, mass[i]);
+    list = add(list, mass[i]);
   }
   sum s = traverse(sum{}, list, list->prev);
 
